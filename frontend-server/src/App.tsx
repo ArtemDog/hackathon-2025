@@ -1,8 +1,10 @@
-import {  } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import HomePage from "./pages/HomePage";
 import ObservationsPage from "./pages/ObservationsPage"
 import ResultPage from './pages/ResultPage';
+import RegisterPage from './pages/RegisterPage';
+import LoginPage from './pages/LoginPage';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
   return (
@@ -11,6 +13,9 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/observations" element={<ObservationsPage />} />
         <Route path="/results" element={<ResultPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/login" element={<LoginPage/>} />
+        <Route path="/profile" element={<ProfilePage />} />
       </Routes>
     </BrowserRouter>
   )

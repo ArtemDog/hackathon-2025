@@ -1,25 +1,46 @@
 import { type FC } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
-type HeaderProps = {
-  hideStartButton?: boolean;
-};
+const Header: FC = () => {
+  const location = useLocation();
 
-const Header: FC<HeaderProps> = ({ hideStartButton = false }) => {
+  const hideStartButton = location.pathname !== "/";
+  const hideProfileButton = location.pathname === "/" || location.pathname === "/register" || location.pathname === "/login";
+
   return (
     <header className="relative z-10 bg-black py-5 md:py-6 shadow-[0_0_100px_20px_#ffffff]">
       <div className="max-w-4xl mx-auto px-4 flex justify-between items-center">
-        <h1 className="text-xl md:text-2xl font-bold">СУДНЫЙ ДЕНЬ</h1>
-        <nav className="space-x-4 md:space-x-6 text-white font-semibold text-base md:text-lg">
-          {!hideStartButton && (
-            <Link to="/observations" className="hover:underline">
-              Начать
+        {/* Заголовок с переходом на homepage */}
+        <Link
+          to="/"
+          className="text-xl md:text-2xl font-extrabold text-white hover:text-gray-300 transition-colors"
+        >
+          СУДНЫЙ ДЕНЬ
+        </Link>
+
+        <div className="flex items-center space-x-4 md:space-x-6 text-white font-semibold text-base md:text-lg">
+          <nav className="flex space-x-4 md:space-x-6">
+            {!hideStartButton && (
+              <Link to="/observations" className="hover:underline">
+                Начать
+              </Link>
+            )}
+            <Link to="/about" className="hover:underline">
+              О нас
+            </Link>
+          </nav>
+
+          {/* Иконка аккаунта */}
+          {!hideProfileButton && (
+            <Link
+              to="/profile"
+              className="text-white hover:text-gray-300 transition-colors text-xl"
+              title="Аккаунт"
+            >
+              <i className="bi bi-person-fill"></i>
             </Link>
           )}
-          <Link to="/about" className="hover:underline">
-            О нас
-          </Link>
-        </nav>
+        </div>
       </div>
     </header>
   );

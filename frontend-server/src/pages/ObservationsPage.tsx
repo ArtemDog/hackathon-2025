@@ -1,28 +1,37 @@
+// ObservationsPage.tsx
 import { type FC, useState, type ChangeEvent } from "react";
 import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
 import ObservationRow from "../components/ObservationRow";
 import Header from "../components/Header";
 import { StarBackground } from "../components/StarBackground";
 
 type Observation = {
+  id: string;
   ra: string;
   dec: string;
   time: string;
 };
 
+const MIN_OBSERVATIONS = 5;
+
 const ObservationsPage: FC = () => {
+  const [cometName, setCometName] = useState<string>(""); // новое поле для названия кометы
   const [observations, setObservations] = useState<Observation[]>(
-    Array.from({ length: 5 }, () => ({ ra: "", dec: "", time: "" }))
+    Array.from({ length: MIN_OBSERVATIONS }, () => ({
+      id: crypto.randomUUID(),
+      ra: "",
+      dec: "",
+      time: "",
+    }))
   );
   const [photo, setPhoto] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  const handleChange = (index: number, field: keyof Observation, value: string) => {
-    setObservations((prev) => {
-      const newObservations = [...prev];
-      newObservations[index] = { ...newObservations[index], [field]: value };
-      return newObservations;
-    });
+  const handleChange = (id: string, field: keyof Observation, value: string) => {
+    setObservations((prev) =>
+      prev.map((obs) => (obs.id === id ? { ...obs, [field]: value } : obs))
+    );
   };
 
   const handlePhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -39,18 +48,40 @@ const ObservationsPage: FC = () => {
   };
 
   const addObservation = () => {
-    setObservations((prev) => [...prev, { ra: "", dec: "", time: "" }]);
+    setObservations((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), ra: "", dec: "", time: "" },
+    ]);
+  };
+
+  const removeObservation = (id: string) => {
+    if (observations.length > MIN_OBSERVATIONS) {
+      setObservations((prev) => prev.filter((obs) => obs.id !== id));
+    }
   };
 
   const predictResult = async () => {
     try {
-      const formData = new FormData();
-      formData.append("observations", JSON.stringify(observations));
-      if (photo) formData.append("photo", photo);
+      // Формируем объект для отправки
+      const data: any = {
+        cometName,
+        observations,
+        photo: null,
+      };
 
-      // Относительный путь — прокси перенаправит на бек
-      const response = await axios.post("/api/observations", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      // Конвертируем фото в Base64
+      if (photo) {
+        data.photo = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = (err) => reject(err);
+          reader.readAsDataURL(photo);
+        });
+      }
+
+      // Отправка JSON на сервер
+      const response = await axios.post("/api/observations", data, {
+        headers: { "Content-Type": "application/json" },
       });
 
       console.log("Ответ сервера:", response.data);
@@ -59,51 +90,61 @@ const ObservationsPage: FC = () => {
     }
   };
 
-
   return (
-    <div className="relative min-h-screen flex flex-col text-white overflow-hidden bg-black">
+    <div className="relative min-h-screen flex flex-col text-white overflow-y-auto bg-black">
       <StarBackground />
 
       <div className="relative z-10 flex-1 flex flex-col">
-        <Header hideStartButton={true} />
+        <Header />
 
-        <div className="flex-1 flex flex-col lg:flex-row justify-center items-start px-8 py-12 gap-12">
+        <div className="max-w-4xl mx-auto px-4 flex-1 flex flex-col lg:flex-row justify-center items-start py-12 gap-12">
           {/* Левая часть — наблюдения */}
           <div className="w-full lg:w-2/3 flex flex-col items-stretch space-y-6">
-            <h1 className="text-3xl font-bold text-center">Введите наблюдения кометы</h1>
+            <h1 className="text-3xl font-bold text-left">Введите наблюдения кометы</h1>
 
-            <div className="space-y-4">
-              {observations.map((obs, index) => (
-                <ObservationRow
-                  key={index}
-                  observation={obs}
-                  onChange={(field, value) => handleChange(index, field, value)}
-                />
-              ))}
-            </div>
+            {/* Поле для названия кометы */}
+            <input
+              type="text"
+              value={cometName}
+              onChange={(e) => setCometName(e.target.value)}
+              placeholder="Название кометы"
+              className="w-full p-3 rounded-lg bg-black/20 border border-gray-700 placeholder-gray-400 text-white focus:outline-none focus:border-white transition"
+            />
 
-            <div className="flex flex-wrap justify-center gap-4 mt-4">
+            <div className="flex flex-col w-full bg-black/10 backdrop-blur-md border border-gray-700 rounded-lg p-4 divide-y divide-gray-700 hover:bg-black/50 transition-colors">
+              <AnimatePresence>
+                {observations.map((obs, index) => (
+                  <motion.div
+                    key={obs.id}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -50 }}
+                    layout
+                  >
+                    <ObservationRow
+                      index={index}
+                      observation={obs}
+                      onChange={(field, value) => handleChange(obs.id, field, value)}
+                      onRemove={() => removeObservation(obs.id)}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+
+              {/* Кнопка Добавить наблюдение */}
               <button
                 onClick={addObservation}
-                className="px-6 py-3 bg-gray-800 text-gray-100 rounded-lg font-bold hover:bg-gray-700 transition"
+                className="w-full mt-2 flex items-center justify-center border border-gray-700 rounded-lg p-2 text-gray-300 hover:border-white hover:text-white transition"
               >
-                Добавить наблюдение
-              </button>
-
-              <button
-                onClick={predictResult}
-                className="px-6 py-3 bg-white text-black rounded-lg font-bold hover:bg-gray-200 transition"
-              >
-                Предсказать результат
+                <i className="bi bi-plus-lg text-xl" />
               </button>
             </div>
           </div>
 
           {/* Правая часть — загрузка фото */}
           <div className="w-full lg:w-1/3 flex flex-col items-center">
-            <h2 className="text-2xl font-semibold mb-4 text-center">Фото кометы</h2>
-
-            <div className="w-full max-w-sm">
+            <h2 className="text-3xl font-bold text-center mb-6">Фото кометы</h2>
+            <div className="w-full max-w-sm flex flex-col items-center">
               <label
                 htmlFor="photo-upload"
                 className={`w-full aspect-square border-2 border-dashed border-gray-600 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-white transition overflow-hidden ${
@@ -118,7 +159,9 @@ const ObservationsPage: FC = () => {
                   />
                 ) : (
                   <div className="flex flex-col items-center justify-center text-gray-400">
-                    <span className="text-5xl mb-2">📷</span>
+                    <span className="text-5xl mb-2">
+                      <i className="bi bi-image"></i>
+                    </span>
                     <p className="text-center px-2">Нажмите, чтобы выбрать фото</p>
                   </div>
                 )}
@@ -133,17 +176,22 @@ const ObservationsPage: FC = () => {
 
               {photo && (
                 <div className="mt-4 flex flex-col items-center w-full">
-                  <p className="text-gray-400 text-sm mb-2 truncate text-center">
-                    Загружено: {photo.name}
-                  </p>
                   <button
                     onClick={handleRemovePhoto}
-                    className="px-4 py-2 bg-gray-800 text-white rounded-lg font-semibold hover:bg-gray-700 transition"
+                    className="w-full bg-blue-600 text-white font-bold rounded-lg py-4 hover:bg-blue-500 transition"
                   >
                     Удалить фото
                   </button>
                 </div>
               )}
+
+              {/* Кнопка Предсказать результат под фото */}
+              <button
+                onClick={predictResult}
+                className="w-full mt-4 bg-white text-black rounded-lg font-bold py-4 hover:bg-gray-200 transition"
+              >
+                Предсказать результат
+              </button>
             </div>
           </div>
         </div>
