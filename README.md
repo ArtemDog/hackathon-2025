@@ -8,11 +8,11 @@
 
 **👨‍💻 Артём Кузнецов**  
 *Fullstack Developer*  
-[![GitHub](https://img.shields.io/badge/GitHub-@username1-181717?style=flat&logo=github)](https://github.com/username1)
+[![GitHub](https://img.shields.io/badge/GitHub-@username1-181717?style=flat&logo=github)](https://github.com/ArtemDog)
 
 **👨‍💻 Алексей Князев**  
 *Backend Developer*  
-[![GitHub](https://img.shields.io/badge/GitHub-@username2-181717?style=flat&logo=github)](https://github.com/username2)
+[![GitHub](https://img.shields.io/badge/GitHub-@username2-181717?style=flat&logo=github)](https://github.com/Mopolop)
 
 ---
 
