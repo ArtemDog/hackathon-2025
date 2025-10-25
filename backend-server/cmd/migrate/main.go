@@ -8,6 +8,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
+	"backend-server/internal/app/ds"
 	"backend-server/internal/app/dsn"
 )
 
@@ -27,16 +28,9 @@ func main() {
 		log.Fatalf(" Failed to connect to database: %v", err)
 	}
 
-	sqlDB, err := db.DB()
-	if err != nil {
-		log.Fatalf(" Failed to get generic DB object: %v", err)
-	}
-	defer sqlDB.Close()
-
-	// Проверяем подключение
-	if err := sqlDB.Ping(); err != nil {
-		log.Fatalf(" Database ping failed: %v", err)
-	}
-
-	fmt.Println("✅ Successfully connected to PostgreSQL!")
+	db.AutoMigrate(
+		&ds.Comet{},
+		&ds.Observation{},
+		&ds.CloseApproach{},
+	)
 }
