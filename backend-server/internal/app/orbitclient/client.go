@@ -17,8 +17,20 @@ type ObservationReq struct {
 	Time string  `json:"time"`
 }
 
+// OrbitResponse represents the updated response including close approach
+type OrbitResponse struct {
+	A                         float64 `json:"a"`
+	Eccentricity              float64 `json:"eccentricity"`
+	Inclination               float64 `json:"inclination"`
+	LongitudeOfAscendingNode  float64 `json:"longitude_of_ascending_node"`
+	ArgumentOfPerihelion      float64 `json:"argument_of_perihelion"`
+	TimeOfPerihelion          string  `json:"time_of_perihelion"`
+	ClosestApproachTime       string  `json:"closest_approach_time"`
+	ClosestApproachDistanceAU float64 `json:"closest_approach_distance_au"`
+}
+
 // CalculateOrbit posts observations to the python orbit service and returns parsed JSON
-func CalculateOrbit(observations []ObservationReq) (map[string]interface{}, error) {
+func CalculateOrbit(observations []ObservationReq) (*OrbitResponse, error) {
 	url := os.Getenv("ORBIT_SERVICE_URL")
 	if url == "" {
 		url = "http://localhost:8000/calculate-orbit"
@@ -52,10 +64,10 @@ func CalculateOrbit(observations []ObservationReq) (map[string]interface{}, erro
 		return nil, fmt.Errorf("orbit service returned %s: %s", resp.Status, string(body))
 	}
 
-	var out map[string]interface{}
+	var out OrbitResponse
 	if err := json.Unmarshal(body, &out); err != nil {
 		return nil, fmt.Errorf("unmarshal response: %w", err)
 	}
 
-	return out, nil
+	return &out, nil
 }
