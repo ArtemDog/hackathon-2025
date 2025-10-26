@@ -16,7 +16,7 @@ type Observation = {
 const MIN_OBSERVATIONS = 5;
 
 const ObservationsPage: FC = () => {
-  const [cometName, setCometName] = useState<string>(""); // новое поле для названия кометы
+  const [cometName, setCometName] = useState<string>("");
   const [observations, setObservations] = useState<Observation[]>(
     Array.from({ length: MIN_OBSERVATIONS }, () => ({
       id: crypto.randomUUID(),
@@ -27,6 +27,7 @@ const ObservationsPage: FC = () => {
   );
   const [photo, setPhoto] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (id: string, field: keyof Observation, value: string) => {
     setObservations((prev) =>
@@ -61,12 +62,14 @@ const ObservationsPage: FC = () => {
   };
 
   const predictResult = async () => {
+    if (!cometName || !photo) return;
+    setLoading(true);
+
     try {
-      // Формируем объект для отправки
-      const data: any = {
+      const data = {
         cometName,
-        observations,
-        photo: null,
+        observations: observations.map(({ ra, dec, time }) => ({ ra, dec, time })),
+        photo: null as string | null,
       };
 
       // Конвертируем фото в Base64
@@ -79,14 +82,17 @@ const ObservationsPage: FC = () => {
         });
       }
 
-      // Отправка JSON на сервер
       const response = await axios.post("/api/observations", data, {
         headers: { "Content-Type": "application/json" },
       });
 
       console.log("Ответ сервера:", response.data);
+      alert("Данные успешно отправлены!");
     } catch (error) {
       console.error("Ошибка при отправке:", error);
+      alert("Ошибка при отправке данных");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -102,7 +108,6 @@ const ObservationsPage: FC = () => {
           <div className="w-full lg:w-2/3 flex flex-col items-stretch space-y-6">
             <h1 className="text-3xl font-bold text-left">Введите наблюдения кометы</h1>
 
-            {/* Поле для названия кометы */}
             <input
               type="text"
               value={cometName}
@@ -131,7 +136,6 @@ const ObservationsPage: FC = () => {
                 ))}
               </AnimatePresence>
 
-              {/* Кнопка Добавить наблюдение */}
               <button
                 onClick={addObservation}
                 className="w-full mt-2 flex items-center justify-center border border-gray-700 rounded-lg p-2 text-gray-300 hover:border-white hover:text-white transition"
@@ -185,12 +189,16 @@ const ObservationsPage: FC = () => {
                 </div>
               )}
 
-              {/* Кнопка Предсказать результат под фото */}
               <button
                 onClick={predictResult}
-                className="w-full mt-4 bg-white text-black rounded-lg font-bold py-4 hover:bg-gray-200 transition"
+                disabled={!cometName || !photo || loading}
+                className={`w-full mt-4 rounded-lg font-bold py-4 transition ${
+                  !cometName || !photo || loading
+                    ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                    : "bg-white text-black hover:bg-gray-200"
+                }`}
               >
-                Предсказать результат
+                {loading ? "Отправка..." : "Предсказать результат"}
               </button>
             </div>
           </div>
