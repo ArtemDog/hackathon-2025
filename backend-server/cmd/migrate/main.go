@@ -32,5 +32,6 @@ func main() {
 		&ds.Comet{},
 		&ds.Observation{},
 		&ds.CloseApproach{},
+		&ds.User{},
 	)
 }

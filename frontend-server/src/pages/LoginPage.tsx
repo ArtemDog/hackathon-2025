@@ -1,4 +1,5 @@
-import { type FC, useState, type FormEvent } from "react";
+import { type FC, useState, useEffect, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { motion } from "framer-motion";
 import Header from "../components/Header";
@@ -8,6 +9,11 @@ const LoginPage: FC = () => {
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) navigate("/observations"); // или на главную страницу приложения после авторизации
+  }, [navigate]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
