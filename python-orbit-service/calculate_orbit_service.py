@@ -1,4 +1,4 @@
-# calculate_orbit_service.py
+# calculate_orbit_service_fixed.py
 
 from typing import List, Dict, Any
 from fastapi import FastAPI
@@ -13,14 +13,12 @@ from scipy.optimize import least_squares
 
 app = FastAPI(
     title="Comet Orbit Calculation Service",
-    description="API для расчёта орбитальных элементов кометы по наблюдениям (RA, Dec, Time).",
     version="1.2"
 )
 
-# --------------------------------------------------------------------------
+# ---------------------------
 # Модели FastAPI
-# --------------------------------------------------------------------------
-
+# ---------------------------
 class Observation(BaseModel):
     ra: float
     dec: float
@@ -29,9 +27,14 @@ class Observation(BaseModel):
 class OrbitInput(BaseModel):
     observations: List[Observation]
 
-# --------------------------------------------------------------------------
+# ---------------------------
 # Вспомогательные функции
-# --------------------------------------------------------------------------
+# ---------------------------
+def _ra_dec_to_unit_vector(ra_deg: float, dec_deg: float) -> np.ndarray:
+    c = SkyCoord(ra=ra_deg * u.deg, dec=dec_deg * u.deg, frame="icrs")
+    cart = c.cartesian
+    vec = np.array([cart.x.value, cart.y.value, cart.z.value], dtype=float)
+    return vec / np.linalg.norm(vec)
 
 def _build_orbit_from_elements(a_au, ecc, inc_deg, raan_deg, argp_deg, tp_time):
     a = a_au * u.au
@@ -53,7 +56,6 @@ def _predict_angles_from_elements(a_au, ecc, inc_deg, raan_deg, argp_deg, tp_tim
         r_earth = np.array(earth.xyz.to(u.km).value)
         topo = r_comet - r_earth
         topo /= np.linalg.norm(topo)
-
         pred_coord = SkyCoord(
             x=topo[0], y=topo[1], z=topo[2],
             representation_type="cartesian",
@@ -65,10 +67,9 @@ def _predict_angles_from_elements(a_au, ecc, inc_deg, raan_deg, argp_deg, tp_tim
         out.append(sph.lat.rad)
     return np.array(out)
 
-# --------------------------------------------------------------------------
-# Главная функция вычисления орбиты
-# --------------------------------------------------------------------------
-
+# ---------------------------
+# Главная функция
+# ---------------------------
 def calculate_orbit(observations: List[Dict[str, Any]]) -> Dict[str, Any]:
     if len(observations) < 5:
         raise ValueError("Нужно минимум 5 наблюдений")
@@ -80,16 +81,14 @@ def calculate_orbit(observations: List[Dict[str, Any]]) -> Dict[str, Any]:
     obs_angles[0::2] = obs_ra_rad
     obs_angles[1::2] = obs_dec_rad
 
-    # Начальные приближения ближе к синтетическим данным
-    a0, ecc0, inc0, raan0, argp0 = 2.5, 0.3, 7.0, 120.0, 45.0
-    tp_guess = Time("2025-01-01T00:00:00", scale="utc")
+    # Начальные приближения
+    a0, ecc0, inc0, raan0, argp0 = 1.5, 0.1, 2.0, 50.0, 285.0
+    tp_guess = Time("2000-01-01T12:00:00", scale="utc")
     x0 = np.array([a0, ecc0, inc0, raan0, argp0, tp_guess.mjd])
 
-    # Границы параметров
-    tp_min = min(times).mjd - 365
-    tp_max = max(times).mjd + 365
-    lower_bounds = [0.1, 0.0, 0.0, 0.0, 0.0, tp_min]
-    upper_bounds = [50.0, 0.99, 180.0, 360.0, 360.0, tp_max]
+    # Границы (bounds)
+    lower_bounds = [0.1, 0.0, 0.0, 0.0, 0.0, tp_guess.mjd - 1000]
+    upper_bounds = [10.0, 0.99, 180.0, 360.0, 360.0, tp_guess.mjd + 1000]
 
     def residuals(x):
         a, ecc, inc, raan, argp, tp_mjd = x
@@ -98,11 +97,10 @@ def calculate_orbit(observations: List[Dict[str, Any]]) -> Dict[str, Any]:
             pred = _predict_angles_from_elements(a, ecc, inc, raan, argp, tp_time, times)
         except Exception as e:
             raise RuntimeError(f"Ошибка при предсказании углов: {e}")
-
         dra = ((pred[0::2] - obs_angles[0::2] + np.pi) % (2 * np.pi)) - np.pi
         ddec = pred[1::2] - obs_angles[1::2]
         res = np.empty_like(pred)
-        res[0::2] = dra * (180 / np.pi) * 3600  # угловые секунды
+        res[0::2] = dra * (180 / np.pi) * 3600
         res[1::2] = ddec * (180 / np.pi) * 3600
         return res
 
@@ -113,7 +111,7 @@ def calculate_orbit(observations: List[Dict[str, Any]]) -> Dict[str, Any]:
         ftol=1e-10,
         xtol=1e-10,
         max_nfev=1000,
-        verbose=0
+        verbose=0  # убираем вывод итераций
     )
 
     if not result.success:
@@ -131,10 +129,9 @@ def calculate_orbit(observations: List[Dict[str, Any]]) -> Dict[str, Any]:
         "time_of_perihelion": tp_iso,
     }
 
-# --------------------------------------------------------------------------
+# ---------------------------
 # FastAPI endpoint
-# --------------------------------------------------------------------------
-
+# ---------------------------
 @app.post("/calculate-orbit")
 async def calculate_orbit_endpoint(input_data: OrbitInput):
     obs_list = [obs.dict() for obs in input_data.observations]
@@ -144,10 +141,9 @@ async def calculate_orbit_endpoint(input_data: OrbitInput):
     except Exception as e:
         return {"error": str(e)}
 
-# --------------------------------------------------------------------------
+# ---------------------------
 # Эфемериды
-# --------------------------------------------------------------------------
-
+# ---------------------------
 try:
     solar_system_ephemeris.set("de432s")
 except Exception:
