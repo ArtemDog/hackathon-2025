@@ -20,6 +20,7 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	usermoder := router.Group("/api")
 	usermoder.Use(h.AuthMiddleware(role.User, role.Admin))
 	{
+		usermoder.POST("/orbit/calculate", h.CalculateOrbitHandler)
 		usermoder.GET("/users/profile", h.GetProfile)
 		usermoder.PUT("/users/profile/updating", h.UpdateProfile)
 		usermoder.POST("/users/logout", h.Logout)
