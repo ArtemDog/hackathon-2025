@@ -26,7 +26,7 @@ const ResultPage: FC = () => {
     cometName: "Комета Хейла Боба",
     minDistance: "0.032 а.е. (≈ 4.8 млн км)",
     approachDate: "14 июня 2025, 04:12 UTC",
-    photoUrl: "/comet-sample.jpg",
+    photoUrl: "http://172.20.0.4:9000/img/comet-fireclaybrick.png",
     orbit: {
       semiMajorAxis: "3.12 а.е.",
       eccentricity: "0.67",

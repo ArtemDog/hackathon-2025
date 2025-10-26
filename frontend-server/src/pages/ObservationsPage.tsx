@@ -2,9 +2,11 @@
 import { type FC, useState, type ChangeEvent } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import ObservationRow from "../components/ObservationRow";
 import Header from "../components/Header";
 import { StarBackground } from "../components/StarBackground";
+
 
 type Observation = {
   id: string;
@@ -16,6 +18,7 @@ type Observation = {
 const MIN_OBSERVATIONS = 5;
 
 const ObservationsPage: FC = () => {
+  const navigate = useNavigate();
   const [cometName, setCometName] = useState<string>("");
   const [observations, setObservations] = useState<Observation[]>(
     Array.from({ length: MIN_OBSERVATIONS }, () => ({
@@ -62,39 +65,37 @@ const ObservationsPage: FC = () => {
   };
 
   const predictResult = async () => {
-    if (!cometName || !photo) return;
-    setLoading(true);
+  if (!cometName) return;
+  setLoading(true);
 
-    try {
-      const data = {
-        cometName,
-        observations: observations.map(({ ra, dec, time }) => ({ ra, dec, time })),
-        photo: null as string | null,
-      };
+  try {
+    const formData = new FormData();
+    formData.append("name", cometName);
+    formData.append(
+      "observations",
+      JSON.stringify(
+        observations.map(({ ra, dec, time }) => ({
+          ra: parseFloat(ra),
+          dec: parseFloat(dec),
+          time,
+        }))
+      )
+    );
+    if (photo) formData.append("photo", photo);
 
-      // Конвертируем фото в Base64
-      if (photo) {
-        data.photo = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = (err) => reject(err);
-          reader.readAsDataURL(photo);
-        });
-      }
+    const response = await axios.post("/api/orbit/calculate", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
 
-      const response = await axios.post("/api/observations", data, {
-        headers: { "Content-Type": "application/json" },
-      });
+    navigate("/results", { state: response.data });
+  } catch (error) {
+    console.error("Ошибка при отправке:", error);
+    alert("Ошибка при отправке данных");
+  } finally {
+    setLoading(false);
+  }
+};
 
-      console.log("Ответ сервера:", response.data);
-      alert("Данные успешно отправлены!");
-    } catch (error) {
-      console.error("Ошибка при отправке:", error);
-      alert("Ошибка при отправке данных");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="relative min-h-screen flex flex-col text-white overflow-y-auto bg-black">

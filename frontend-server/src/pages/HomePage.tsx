@@ -56,7 +56,7 @@ const HomePage: FC = () => {
             }}
           >
             <MotionLink
-              to="/observations"
+              to="/login"
               className="px-8 py-4 bg-white text-black font-bold rounded-lg hover:bg-gray-200 transition"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

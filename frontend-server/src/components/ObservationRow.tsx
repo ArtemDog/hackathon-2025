@@ -1,7 +1,7 @@
 import { type FC, useState } from "react";
 
-
 type Observation = {
+  id: string;
   ra: string;
   dec: string;
   time: string;
@@ -38,17 +38,14 @@ const ObservationRow: FC<ObservationRowProps> = ({
         onClick={() => hovered && onRemove()}
         title={hovered ? "Удалить строку" : ""}
       >
-        {hovered ? (
-          <i className="bi bi-x-lg text-xl pointer-events-none" />
-        ) : (
-          index + 1
-        )}
+        {hovered ? <i className="bi bi-x-lg text-xl pointer-events-none" /> : index + 1}
       </div>
 
       {/* Прямое восхождение */}
       <div className="flex-1 min-w-0 flex items-center bg-black rounded-md border border-gray-600 px-4 py-3 focus-within:border-blue-400 focus-within:shadow-sm transition">
         <input
-          type="text"
+          type="number"
+          step="any"
           placeholder="Прямое восхождение"
           value={observation.ra}
           onChange={(e) => onChange("ra", e.target.value)}
@@ -59,7 +56,8 @@ const ObservationRow: FC<ObservationRowProps> = ({
       {/* Склонение */}
       <div className="flex-1 min-w-0 flex items-center bg-black rounded-md border border-gray-600 px-4 py-3 focus-within:border-blue-400 focus-within:shadow-sm transition">
         <input
-          type="text"
+          type="number"
+          step="any"
           placeholder="Склонение"
           value={observation.dec}
           onChange={(e) => onChange("dec", e.target.value)}
@@ -70,7 +68,8 @@ const ObservationRow: FC<ObservationRowProps> = ({
       {/* Время измерения */}
       <div className="flex-1 min-w-0 flex items-center bg-black rounded-md border border-gray-600 px-4 py-3 focus-within:border-blue-400 focus-within:shadow-sm transition">
         <input
-          type="datetime-local"
+          type="text"
+          placeholder="Время измерения (ISO 8601)"
           value={observation.time}
           onChange={(e) => onChange("time", e.target.value)}
           className="flex-1 min-w-0 bg-black text-white placeholder-gray-400 focus:outline-none transition"

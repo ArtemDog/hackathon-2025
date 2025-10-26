@@ -22,7 +22,7 @@ const Header: FC = () => {
         <div className="flex items-center space-x-4 md:space-x-6 text-white font-semibold text-base md:text-lg">
           <nav className="flex space-x-4 md:space-x-6">
             {!hideStartButton && (
-              <Link to="/observations" className="hover:underline">
+              <Link to="/login" className="hover:underline">
                 Начать
               </Link>
             )}
