@@ -129,15 +129,15 @@ const ResultPage: FC = () => {
               {/* Кнопки под фото */}
               <div className="flex flex-col w-full gap-3">
                 <button
-                  onClick={() => (window.location.href = "/")}
-                  className="w-full px-6 py-3 bg-gray-800 text-white rounded-lg font-semibold hover:bg-gray-700 transition"
-                >
-                  Новое вычисление
-                </button>
-                <button
-                  className="w-full px-6 py-3 bg-white text-black rounded-lg font-semibold hover:bg-gray-200 transition"
+                  className="w-full px-6 py-3 bg-blue-400 text-white rounded-lg font-semibold hover:bg-gray-200 transition"
                 >
                   Скачать отчёт
+                </button>
+                <button
+                  onClick={() => (window.location.href = "/")}
+                  className="w-full px-6 py-3 bg-white text-black rounded-lg font-semibold hover:bg-gray-700 transition"
+                >
+                  Новое вычисление
                 </button>
               </div>
             </motion.div>

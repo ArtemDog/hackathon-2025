@@ -1,17 +1,42 @@
-// LoginPage.tsx
 import { type FC, useState, type FormEvent } from "react";
+import axios from "axios";
 import { motion } from "framer-motion";
 import Header from "../components/Header";
 import { StarBackground } from "../components/StarBackground";
 
 const LoginPage: FC = () => {
-  const [email, setEmail] = useState("");
+  const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    // Логика входа через API
-    console.log({ email, password });
+    setError(null);
+
+    try {
+      const response = await axios.post(
+        "/api/users/login",
+        { login, password },
+        { validateStatus: () => true } // чтобы не кидало исключение при 4xx
+      );
+
+      if (response.status === 200) {
+        // JWT токен приходит в заголовке Authorization
+        const token = response.headers["authorization"];
+        if (token) {
+          localStorage.setItem("token", token);
+          console.log("JWT получен:", token);
+          window.location.href = "/observations";
+        } else {
+          setError("Токен не получен. Проверьте сервер.");
+        }
+      } else {
+        setError("Неверный логин или пароль");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Ошибка соединения с сервером");
+    }
   };
 
   return (
@@ -42,14 +67,14 @@ const LoginPage: FC = () => {
           className="bg-black/20 backdrop-blur-md border border-gray-700 rounded-xl p-6 w-full flex flex-col gap-4"
         >
           <div className="flex flex-col">
-            <label className="mb-1 font-semibold text-white">Email</label>
+            <label className="mb-1 font-semibold text-white">Логин</label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              value={login}
+              onChange={(e) => setLogin(e.target.value)}
               required
               className="px-3 py-2 rounded-lg border border-gray-600 bg-black/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white transition"
-              placeholder="Введите ваш email"
+              placeholder="Введите логин"
             />
           </div>
 
@@ -64,6 +89,10 @@ const LoginPage: FC = () => {
               placeholder="Введите пароль"
             />
           </div>
+
+          {error && (
+            <p className="text-red-400 text-sm text-center">{error}</p>
+          )}
 
           <button
             type="submit"

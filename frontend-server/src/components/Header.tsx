@@ -5,7 +5,8 @@ const Header: FC = () => {
   const location = useLocation();
 
   const hideStartButton = location.pathname !== "/";
-  const hideProfileButton = location.pathname === "/" || location.pathname === "/register" || location.pathname === "/login";
+  const hideAboutButton = location.pathname === "/about";
+  const hideProfileButton = location.pathname === "/" || location.pathname === "/about" || location.pathname === "/register" || location.pathname === "/login";
 
   return (
     <header className="relative z-10 bg-black py-5 md:py-6 shadow-[0_0_100px_20px_#ffffff]">
@@ -25,9 +26,11 @@ const Header: FC = () => {
                 Начать
               </Link>
             )}
-            <Link to="/about" className="hover:underline">
-              О нас
-            </Link>
+            {!hideAboutButton && (
+              <Link to="/about" className="hover:underline">
+                О нас
+              </Link>
+            )}
           </nav>
 
           {/* Иконка аккаунта */}
