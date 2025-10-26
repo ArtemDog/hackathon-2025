@@ -1,5 +1,5 @@
-import { type FC } from "react";
-import { Link } from "react-router-dom";
+import { type FC, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import Header from "../components/Header";
 import { StarBackground } from "../components/StarBackground";
@@ -9,6 +9,12 @@ import Footer from "../components/Footer"
 const MotionLink = motion(Link);
 
 const HomePage: FC = () => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) navigate("/observations"); // или на главную страницу приложения после авторизации
+  }, [navigate]);
+
   return (
     <div className="relative min-h-screen flex flex-col bg-black text-white overflow-hidden">
       {/* Звёздный фон */}

@@ -1,6 +1,7 @@
-// RegisterPage.tsx
 import { type FC, useState, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import axios from "axios";
 import Header from "../components/Header";
 import { StarBackground } from "../components/StarBackground";
 
@@ -8,10 +9,39 @@ const RegisterPage: FC = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    console.log({ name, email, password });
+    setError(null);
+
+    try {
+      const response = await axios.post(
+        "/api/users/registration",
+        { name, login: email, password },
+        { validateStatus: () => true } // чтобы не кидало исключение при 4xx
+      );
+
+      if (response.status === 200) {
+        // JWT токен приходит в заголовке Authorization
+        const token = response.headers["authorization"];
+        if (token) {
+          localStorage.setItem("token", token);
+          console.log("JWT получен:", token);
+          navigate("/profile"); // или "/observations"
+        } else {
+          setError("Токен не получен. Проверьте сервер.");
+        }
+      } else if (response.status === 409) {
+        setError("Пользователь с таким логином уже существует");
+      } else {
+        setError(response.data?.error || "Ошибка регистрации");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Ошибка соединения с сервером");
+    }
   };
 
   return (
@@ -76,6 +106,8 @@ const RegisterPage: FC = () => {
               placeholder="Введите пароль"
             />
           </div>
+
+          {error && <p className="text-red-500 text-sm">{error}</p>}
 
           <button
             type="submit"
