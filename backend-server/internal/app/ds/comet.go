@@ -10,6 +10,7 @@ import (
 type Comet struct {
 	ID              uint            `gorm:"primaryKey;autoIncrement" json:"id"` // Уникальный идентификатор
 	Name            string          `gorm:"type:text;not null" json:"name"`     // Имя кометы
+	ImageURL        string          `gorm:"type:text" json:"image_url"`         // Ссылка на изображение в Minio
 	Epoch           time.Time       `gorm:"not null" json:"epoch"`              // Эпоха орбиты
 	A               float64         `gorm:"not null" json:"a"`                  // Большая полуось (AU)
 	E               float64         `gorm:"not null" json:"e"`                  // Эксцентриситет
