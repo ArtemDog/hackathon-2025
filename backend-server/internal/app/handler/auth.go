@@ -9,7 +9,64 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
+
+func (h *Handler) Registration(ctx *gin.Context) {
+	// Структура запроса внутри метода
+	var body struct {
+		Name     string `json:"name" binding:"required"`
+		Login    string `json:"login" binding:"required"`
+		Password string `json:"password" binding:"required"`
+	}
+
+	// Парсим JSON
+	if err := ctx.BindJSON(&body); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+	}
+
+	// Проверяем, что пользователь с таким логином ещё не существует
+	if existingUser := h.Repository.GetByLogin(body.Login); existingUser != nil {
+		ctx.JSON(http.StatusConflict, gin.H{"error": "login already exists"})
+		return
+	}
+
+	// Хешируем пароль
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to hash password"})
+		return
+	}
+
+	// Создаём пользователя
+	user := ds.User{
+		Name:     body.Name,
+		Login:    body.Login,
+		Password: string(hashedPassword),
+		Role:     role.User, // по умолчанию Guest
+	}
+
+	if err := h.Repository.Create(&user); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create user"})
+		return
+	}
+
+	// Генерируем токен сразу после регистрации
+	accessToken, err := h.GenerateTokens(user.ID, user.Role)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
+		return
+	}
+
+	// Отправляем токен в заголовке
+	ctx.Header("Authorization", "Bearer "+accessToken)
+	ctx.JSON(http.StatusOK, gin.H{
+		"id":    user.ID,
+		"login": user.Login,
+		"role":  user.Role,
+	})
+}
 
 // LoginRequest описывает тело запроса для аутентификации пользователя.
 func (h *Handler) Login(ctx *gin.Context) {
@@ -131,4 +188,75 @@ func (h *Handler) GenerateTokens(userID uint, role role.Role) (string, error) {
 	}
 
 	return token, nil
+}
+
+func (h *Handler) UpdateProfile(ctx *gin.Context) {
+	userID, ok := GetUserIDFromContext(ctx)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var body struct {
+		Name     string `json:"name"`
+		Password string `json:"password"`
+	}
+
+	if err := ctx.BindJSON(&body); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+	}
+
+	// Получаем пользователя
+	user, err := h.Repository.GetByID(userID)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+
+	// Обновляем имя, если оно пришло
+	if body.Name != "" {
+		user.Name = body.Name
+	}
+
+	// Обновляем пароль, если пришёл
+	if body.Password != "" {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to hash password"})
+			return
+		}
+		user.Password = string(hashedPassword)
+	}
+
+	if err := h.Repository.Update(user); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update profile"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"id":    user.ID,
+		"name":  user.Name,
+		"login": user.Login,
+		"role":  user.Role,
+	})
+}
+
+func (h *Handler) GetProfile(ctx *gin.Context) {
+	userID, ok := GetUserIDFromContext(ctx)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	user, err := h.Repository.GetByID(userID)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"name":  user.Name,
+		"login": user.Login,
+	})
 }

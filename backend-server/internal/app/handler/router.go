@@ -13,16 +13,16 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	guest := router.Group("/api")
 	guest.Use(h.BlockAuthUsers())
 	{
-		// guest.POST("/users/register", h.RegisterUser)
+		guest.POST("/users/registration", h.Registration)
 		guest.POST("/users/login", h.Login)
 	}
 
 	usermoder := router.Group("/api")
 	usermoder.Use(h.AuthMiddleware(role.User, role.Admin))
 	{
-		// usermoder.GET("/users/me", h.GetProfile)
-		// usermoder.POST("/draft-request-of-the-distance-to-the-star/add-star", h.AddStarToRequestJSON)
-		// usermoder.POST("/users/logout", h.Logout)
+		usermoder.GET("/users/profile", h.GetProfile)
+		usermoder.PUT("/users/profile/updating", h.UpdateProfile)
+		usermoder.POST("/users/logout", h.Logout)
 
 	}
 }
