@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import Header from "../components/Header";
 import { StarBackground } from "../components/StarBackground";
+import Footer from "../components/Footer"
 
 // Создаём motion-версию Link для анимации кнопок
 const MotionLink = motion(Link);
@@ -60,7 +61,7 @@ const HomePage: FC = () => {
 
             <MotionLink
               to="/register"
-              className="px-8 py-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-500 transition"
+              className="px-8 py-4 bg-blue-400 text-white font-bold rounded-lg hover:bg-blue-600 transition"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
@@ -71,9 +72,7 @@ const HomePage: FC = () => {
         </main>
 
         {/* Footer */}
-        <footer className="bg-transparent text-gray-400 py-4 text-center">
-          © 2025 СУДНЫЙ ДЕНЬ. Все права защищены.
-        </footer>
+        <Footer />
       </div>
     </div>
   );

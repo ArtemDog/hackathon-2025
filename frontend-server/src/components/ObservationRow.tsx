@@ -46,7 +46,7 @@ const ObservationRow: FC<ObservationRowProps> = ({
       </div>
 
       {/* Прямое восхождение */}
-      <div className="flex-1 min-w-0 flex items-center bg-black rounded-md border border-gray-600 px-4 py-3 focus-within:border-blue-600 focus-within:shadow-sm transition">
+      <div className="flex-1 min-w-0 flex items-center bg-black rounded-md border border-gray-600 px-4 py-3 focus-within:border-blue-400 focus-within:shadow-sm transition">
         <input
           type="text"
           placeholder="Прямое восхождение"
@@ -57,7 +57,7 @@ const ObservationRow: FC<ObservationRowProps> = ({
       </div>
 
       {/* Склонение */}
-      <div className="flex-1 min-w-0 flex items-center bg-black rounded-md border border-gray-600 px-4 py-3 focus-within:border-blue-600 focus-within:shadow-sm transition">
+      <div className="flex-1 min-w-0 flex items-center bg-black rounded-md border border-gray-600 px-4 py-3 focus-within:border-blue-400 focus-within:shadow-sm transition">
         <input
           type="text"
           placeholder="Склонение"
@@ -68,7 +68,7 @@ const ObservationRow: FC<ObservationRowProps> = ({
       </div>
 
       {/* Время измерения */}
-      <div className="flex-1 min-w-0 flex items-center bg-black rounded-md border border-gray-600 px-4 py-3 focus-within:border-blue-600 focus-within:shadow-sm transition">
+      <div className="flex-1 min-w-0 flex items-center bg-black rounded-md border border-gray-600 px-4 py-3 focus-within:border-blue-400 focus-within:shadow-sm transition">
         <input
           type="datetime-local"
           value={observation.time}

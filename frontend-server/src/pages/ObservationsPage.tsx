@@ -178,7 +178,7 @@ const ObservationsPage: FC = () => {
                 <div className="mt-4 flex flex-col items-center w-full">
                   <button
                     onClick={handleRemovePhoto}
-                    className="w-full bg-blue-600 text-white font-bold rounded-lg py-4 hover:bg-blue-500 transition"
+                    className="w-full bg-blue-400 text-white font-bold rounded-lg py-4 hover:bg-blue-600 transition"
                   >
                     Удалить фото
                   </button>
